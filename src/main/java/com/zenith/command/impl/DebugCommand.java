@@ -9,8 +9,15 @@ import com.zenith.command.api.CommandCategory;
 import com.zenith.command.api.CommandContext;
 import com.zenith.command.api.CommandUsage;
 import com.zenith.discord.Embed;
+import com.zenith.feature.gui.GuiBuilder;
+import com.zenith.feature.gui.GuiManager;
+import com.zenith.feature.gui.SlotBuilder;
+import com.zenith.mc.item.ItemRegistry;
+import net.kyori.adventure.text.Component;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.Effect;
+import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRemoveMobEffectPacket;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
@@ -177,7 +184,41 @@ public class DebugCommand extends Command {
                 CONFIG.debug.inventorySyncOnLogin = getToggle(c, "toggle");
                 c.getSource().getEmbed()
                     .title("Inventory Sync On Login " + toggleStrCaps(CONFIG.debug.inventorySyncOnLogin));
-            })));
+            })))
+            .then(literal("gui").executes(c -> {
+                var activePlayer = Proxy.getInstance().getActivePlayer();
+                if (activePlayer == null) {
+                    c.getSource().getEmbed()
+                        .title("No player connected")
+                        .errorColor();
+                    return;
+                }
+                GuiManager.INSTANCE.open(
+                    GuiBuilder.create()
+                        .session(activePlayer)
+                        .addPage(GuiBuilder.createPage()
+                            .id("page-1")
+                            .title(Component.text("test-page-1"))
+                            .containerType(ContainerType.GENERIC_9X3)
+                            .slot(8, SlotBuilder.create()
+                                .item(ItemRegistry.NETHERITE_BLOCK)
+                                .amount(64)
+                                .name(Component.text("a nice block"))
+                                .build())
+                            .slotsRange(11, 20, SlotBuilder.create()
+                                .item(ItemRegistry.DIAMOND_SWORD)
+                                .dataComponent(DataComponentTypes.DAMAGE, 12)
+                                .name(Component.text("a nice sword, but a bit broken"))
+                                .buttonClickHandler((button, g, page, index, leftClick) -> {
+                                    g.session().sendAsyncAlert("Button clicked on page 1 at index " + index);
+                                })
+                                .build())
+                            .slot(22, SlotBuilder.create()
+                                .playerHead("rfresh2", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTg3YmFhNDc2NzIzNGMwMWMwNGI4YmJlYjUxOGEwNTNkY2U3MzlmNGEwNDM1OGE0MjQzMDJmYjRhMDE3MmY4In19fQ==")
+                                .build())
+                            .build())
+                        .build());
+            }));
     }
 
     @Override

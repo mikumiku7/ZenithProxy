@@ -1,0 +1,83 @@
+package com.zenith.feature.gui;
+
+import com.zenith.event.client.ClientDisconnectEvent;
+import com.zenith.event.player.PlayerConnectionRemovedEvent;
+import com.zenith.network.codec.PacketCodecRegistries;
+import com.zenith.network.codec.PacketHandlerCodec;
+import com.zenith.network.codec.PacketHandlerStateCodec;
+import com.zenith.network.server.ServerSession;
+import org.geysermc.mcprotocollib.protocol.data.ProtocolState;
+import org.geysermc.mcprotocollib.protocol.data.game.inventory.ClickItemAction;
+import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerActionType;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundRespawnPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundStartConfigurationPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClosePacket;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.github.rfresh2.EventConsumer.of;
+import static com.zenith.Globals.EVENT_BUS;
+import static com.zenith.Globals.SERVER_LOG;
+
+public class GuiManager {
+    public static final GuiManager INSTANCE = new GuiManager();
+    private final Map<ServerSession, Gui> openGuiMap = new ConcurrentHashMap<>();
+
+    private GuiManager() {
+        EVENT_BUS.subscribe(this,
+            of(ClientDisconnectEvent.class, e -> openGuiMap.clear()),
+            of(PlayerConnectionRemovedEvent.class, e -> openGuiMap.remove(e.serverConnection()))
+        );
+        var codec = PacketHandlerCodec.serverBuilder()
+            .setId("gui")
+            .setPriority(5)
+            .state(ProtocolState.GAME, PacketHandlerStateCodec.serverBuilder()
+                .inbound(ServerboundContainerClickPacket.class, (p, s) -> {
+                    var gui = openGuiMap.get(s);
+                    if (gui == null) {
+                        return p;
+                    }
+                    boolean leftClick = true;
+                    if (p.getActionType() == ContainerActionType.CLICK_ITEM) {
+                        var param = (ClickItemAction) p.getActionParam();
+                        leftClick = param == ClickItemAction.LEFT_CLICK;
+                    }
+                    gui.onClick(p.getSlot(), leftClick);
+                    return null;
+                })
+                .inbound(ServerboundContainerClosePacket.class, (p, s) -> {
+                    var gui = openGuiMap.get(s);
+                    if (gui == null) {
+                        return p;
+                    }
+                    gui.close();
+                    openGuiMap.remove(s);
+                    SERVER_LOG.info("Closed GUI {} for: {}", gui.hashCode(), s.getUsername());
+                    return null;
+                })
+                .outbound(ClientboundLoginPacket.class, (p, s) -> {
+                    openGuiMap.remove(s);
+                    return p;
+                })
+                .outbound(ClientboundStartConfigurationPacket.class, (p, s) -> {
+                    openGuiMap.remove(s);
+                    return p;
+                })
+                .outbound(ClientboundRespawnPacket.class, (p, s) -> {
+                    openGuiMap.remove(s);
+                    return p;
+                })
+                .build())
+            .build();
+        PacketCodecRegistries.SERVER_REGISTRY.register(codec);
+    }
+
+    public void open(Gui gui) {
+        SERVER_LOG.info("Opening GUI {} for: {}", gui.hashCode(), gui.session().getUsername());
+        openGuiMap.put(gui.session(), gui);
+        gui.open();
+    }
+}

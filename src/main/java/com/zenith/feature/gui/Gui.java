@@ -78,7 +78,7 @@ public class Gui {
         activePage.onClick(this, containerClick);
     }
 
-    public void close() {
+    public void onClose() {
         if (!active) return;
         activePage.close(this);
         active = false;

@@ -49,7 +49,7 @@ public class GuiManager {
                     if (gui == null) {
                         return p;
                     }
-                    gui.close();
+                    gui.onClose();
                     openGuiMap.remove(s);
                     SERVER_LOG.info("Closed GUI {} for: {}", gui.hashCode(), s.getUsername());
                     return null;
@@ -73,7 +73,21 @@ public class GuiManager {
 
     public void open(Gui gui) {
         SERVER_LOG.info("Opening GUI {} for: {}", gui.hashCode(), gui.session().getUsername());
+        if (openGuiMap.containsKey(gui.session())) {
+            close(gui.session());
+        }
         openGuiMap.put(gui.session(), gui);
         gui.open();
+    }
+
+    public void close(Gui gui) {
+        close(gui.session());
+    }
+
+    public void close(ServerSession session) {
+        var g = openGuiMap.remove(session);
+        if (g != null) {
+            g.onClose();
+        }
     }
 }

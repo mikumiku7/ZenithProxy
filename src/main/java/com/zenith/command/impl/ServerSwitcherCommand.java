@@ -70,8 +70,8 @@ public class ServerSwitcherCommand extends Command {
                             // consistent random item per server
                             .item(ItemRegistry.REGISTRY.get(Math.abs(server.hashCode() % 300) + 1))
                             .name(Component.text(server.name()))
-                            .buttonClickHandler((button, gui, page, index, leftClick) -> {
-                                if (!leftClick) return;
+                            .buttonClickHandler((button, gui, page, event) -> {
+                                if (!event.isLeftClick()) return;
                                 gui.session().transfer(server.address(), server.port());
                             })
                             .build())

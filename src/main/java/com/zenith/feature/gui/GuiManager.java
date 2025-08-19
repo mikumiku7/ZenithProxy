@@ -8,8 +8,6 @@ import com.zenith.network.codec.PacketHandlerCodec;
 import com.zenith.network.codec.PacketHandlerStateCodec;
 import com.zenith.network.server.ServerSession;
 import org.geysermc.mcprotocollib.protocol.data.ProtocolState;
-import org.geysermc.mcprotocollib.protocol.data.game.inventory.ClickItemAction;
-import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerActionType;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundRespawnPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundStartConfigurationPacket;
@@ -42,12 +40,8 @@ public class GuiManager {
                     if (gui == null) {
                         return p;
                     }
-                    boolean leftClick = true;
-                    if (p.getActionType() == ContainerActionType.CLICK_ITEM) {
-                        var param = (ClickItemAction) p.getActionParam();
-                        leftClick = param == ClickItemAction.LEFT_CLICK;
-                    }
-                    gui.onClick(p.getSlot(), leftClick);
+                    var containerClick = new ContainerClick(p.getSlot(), p.getActionType(), p.getActionParam());
+                    gui.onClick(containerClick);
                     return null;
                 })
                 .inbound(ServerboundContainerClosePacket.class, (p, s) -> {

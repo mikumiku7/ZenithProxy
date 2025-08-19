@@ -73,10 +73,9 @@ public class Gui {
         activePage.tick(this);
     }
 
-    // returns true if the click was handled, false otherwise
-    public void onClick(int index, final boolean leftClick) {
+    public void onClick(final ContainerClick containerClick) {
         if (!active) return;
-        activePage.onClick(this, index, leftClick);
+        activePage.onClick(this, containerClick);
     }
 
     public void close() {

@@ -222,8 +222,10 @@ public class DebugCommand extends Command {
                                 .item(ItemRegistry.DIAMOND_SWORD)
                                 .dataComponent(DataComponentTypes.DAMAGE, 12)
                                 .name(Component.text("a nice sword, but a bit broken"))
-                                .buttonClickHandler((button, g, page, index, leftClick) -> {
-                                    g.session().sendAsyncAlert("Button clicked on page 1 at index " + index);
+                                .buttonClickHandler((button, g, page, event) -> {
+                                    if (event.isLeftOrRightClick()) {
+                                        g.session().sendAsyncAlert("Button clicked on page 1 at index " + event.slot());
+                                    }
                                 })
                                 .build())
                             .slot(21, SlotBuilder.create()

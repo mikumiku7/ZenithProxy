@@ -95,20 +95,21 @@ public class Page {
     }
 
     public void tick(Gui gui) {
-        if (stale) {
-            open(gui);
-        }
         for (int i = 0; i < contents.size(); i++) {
             var slot = contents.get(i);
             slot.tick(gui, this, i);
         }
+        if (stale) {
+            open(gui);
+        }
     }
 
-    public void onClick(final Gui gui, int index, final boolean leftClick) {
+    public void onClick(final Gui gui, final ContainerClick containerClick) {
+        int index = containerClick.slot();
         if (index < contents.size() && index >= 0) {
             var slot = contents.get(index);
             if (slot instanceof Button button) {
-                button.click(gui, this, index, leftClick);
+                button.click(gui, this, containerClick);
             }
         }
         sendContents(gui);

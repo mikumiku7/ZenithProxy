@@ -101,16 +101,16 @@ public class SlotBuilder {
     }
 
     public SlotBuilder nextPageButton() {
-        return buttonClickHandler((button, gui, page, index, leftClick) -> {
-            if (leftClick) {
+        return buttonClickHandler((button, gui, page, containerClick) -> {
+            if (containerClick.isLeftOrRightClick()) {
                 gui.nextPage();
             }
         });
     }
 
     public SlotBuilder previousPageButton() {
-        return buttonClickHandler((button, gui, page, index, leftClick) -> {
-            if (leftClick) {
+        return buttonClickHandler((button, gui, page, containerClick) -> {
+            if (containerClick.isLeftOrRightClick()) {
                 gui.previousPage();
             }
         });

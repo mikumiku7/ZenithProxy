@@ -1,5 +1,6 @@
 package com.zenith.feature.gui.elements;
 
+import com.zenith.feature.gui.ContainerClick;
 import com.zenith.feature.gui.Gui;
 import com.zenith.feature.gui.Page;
 import lombok.EqualsAndHashCode;
@@ -23,7 +24,7 @@ public class Button extends ItemSlot {
         this.onClick = onClick;
     }
 
-    public void click(final Gui gui, final Page page, final int index, final boolean leftClick) {
-        onClick.accept(this, gui, page, index, leftClick);
+    public void click(final Gui gui, final Page page, final ContainerClick containerClick) {
+        onClick.accept(this, gui, page, containerClick);
     }
 }

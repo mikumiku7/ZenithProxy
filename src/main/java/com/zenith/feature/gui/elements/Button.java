@@ -13,17 +13,17 @@ import org.jspecify.annotations.NullMarked;
 public class Button extends ItemSlot {
     private final ButtonClickHandler onClick;
 
-    public Button(final ItemStack item, ButtonClickHandler onClick) {
+    public Button(ItemStack item, ButtonClickHandler onClick) {
         super(item);
+        this.onClick = onClick;
+    }
+
+    public Button(ItemStack item, ButtonClickHandler onClick, ItemSlotTickHandler tickHandler) {
+        super(item, tickHandler);
         this.onClick = onClick;
     }
 
     public void click(final Gui gui, final Page page, final int index, final boolean leftClick) {
         onClick.accept(this, gui, page, index, leftClick);
-    }
-
-    @FunctionalInterface
-    public interface ButtonClickHandler {
-        void accept(Button button, Gui gui, final Page page, int index, boolean leftClick);
     }
 }

@@ -98,6 +98,10 @@ public class Page {
         if (stale) {
             open(gui);
         }
+        for (int i = 0; i < contents.size(); i++) {
+            var slot = contents.get(i);
+            slot.tick(gui, this, i);
+        }
     }
 
     public void onClick(final Gui gui, int index, final boolean leftClick) {
@@ -108,6 +112,10 @@ public class Page {
             }
         }
         sendContents(gui);
+    }
+
+    public void setStale() {
+        this.stale = true;
     }
 
     public void close(final Gui gui) {

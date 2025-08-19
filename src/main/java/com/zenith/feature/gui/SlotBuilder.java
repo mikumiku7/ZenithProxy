@@ -1,21 +1,20 @@
 package com.zenith.feature.gui;
 
 import com.zenith.feature.api.sessionserver.SessionServerApi;
-import com.zenith.feature.gui.elements.Button;
-import com.zenith.feature.gui.elements.ItemSlot;
-import com.zenith.feature.gui.elements.Slot;
+import com.zenith.feature.gui.elements.*;
 import com.zenith.mc.item.ItemData;
 import com.zenith.mc.item.ItemRegistry;
 import net.kyori.adventure.text.Component;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.*;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.zenith.Globals.SERVER_LOG;
@@ -24,8 +23,9 @@ import static com.zenith.Globals.SERVER_LOG;
 public class SlotBuilder {
     private int itemId = 0;
     private int amount = 1;
-    private Button.@Nullable ButtonClickHandler buttonClickHandler = null;
-    private final Map<DataComponentType<?>, DataComponent<?, ?>> dataComponents = new HashMap<>();
+    private @Nullable ButtonClickHandler buttonClickHandler = null;
+    private ItemSlotTickHandler itemSlotTickHandler = ItemSlot.emptyTickHandler;
+    private final DataComponents dataComponents = new DataComponents(new HashMap<>());
 
     private SlotBuilder() {}
 
@@ -85,31 +85,17 @@ public class SlotBuilder {
         return this;
     }
 
-    public <T> SlotBuilder dataComponent(DataComponentType<T> dataComponentType, T data) {
-        dataComponents.put(
-            dataComponentType,
-            dataComponentType.getDataComponentFactory().create(dataComponentType, data)
-        );
+    public <T> SlotBuilder dataComponent(DataComponentType<T> dataComponentType, @Nullable T data) {
+        dataComponents.put(dataComponentType, data);
         return this;
     }
 
-    public SlotBuilder dataComponent(IntComponentType dataComponentType, int data) {
-        dataComponents.put(
-            dataComponentType,
-            ((IntComponentType.IntDataComponentFactory) dataComponentType.getDataComponentFactory()).createPrimitive(dataComponentType, data)
-        );
+    public SlotBuilder tickHandler(ItemSlotTickHandler itemSlotTickHandler) {
+        this.itemSlotTickHandler = itemSlotTickHandler;
         return this;
     }
 
-    public SlotBuilder dataComponent(BooleanComponentType dataComponentType, boolean data) {
-        dataComponents.put(
-            dataComponentType,
-            ((BooleanComponentType.BooleanDataComponentFactory) dataComponentType.getDataComponentFactory()).createPrimitive(dataComponentType, data)
-        );
-        return this;
-    }
-
-    public SlotBuilder buttonClickHandler(Button.ButtonClickHandler handler) {
+    public SlotBuilder buttonClickHandler(ButtonClickHandler handler) {
         this.buttonClickHandler = handler;
         return this;
     }
@@ -131,11 +117,11 @@ public class SlotBuilder {
     }
 
     public Slot build() {
-        var itemStack = new ItemStack(itemId, amount, new DataComponents(dataComponents));
+        var itemStack = new ItemStack(itemId, amount, dataComponents);
         if (buttonClickHandler != null) {
-            return new Button(itemStack, buttonClickHandler);
+            return new Button(itemStack, buttonClickHandler, itemSlotTickHandler);
         } else {
-            return new ItemSlot(itemStack);
+            return new ItemSlot(itemStack, itemSlotTickHandler);
         }
     }
 }

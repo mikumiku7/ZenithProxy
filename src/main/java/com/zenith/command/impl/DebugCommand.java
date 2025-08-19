@@ -13,6 +13,8 @@ import com.zenith.feature.gui.GuiBuilder;
 import com.zenith.feature.gui.GuiManager;
 import com.zenith.feature.gui.SlotBuilder;
 import com.zenith.mc.item.ItemRegistry;
+import com.zenith.util.timer.Timer;
+import com.zenith.util.timer.Timers;
 import net.kyori.adventure.text.Component;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.Effect;
@@ -193,6 +195,7 @@ public class DebugCommand extends Command {
                         .errorColor();
                     return;
                 }
+                final Timer blockTimer = Timers.tickTimer();
                 GuiManager.INSTANCE.open(
                     GuiBuilder.create()
                         .session(activePlayer)
@@ -204,6 +207,16 @@ public class DebugCommand extends Command {
                                 .item(ItemRegistry.NETHERITE_BLOCK)
                                 .amount(64)
                                 .name(Component.text("a nice block"))
+                                .tickHandler((slot, gui, page, index) -> {
+                                    if (!blockTimer.tick(10)) return;
+                                    var amount = slot.item().getAmount();
+                                    amount++;
+                                    if (amount >= 64) {
+                                        amount = 1;
+                                    }
+                                    slot.item().setAmount(amount);
+                                    page.setStale();
+                                })
                                 .build())
                             .slotsRange(11, 20, SlotBuilder.create()
                                 .item(ItemRegistry.DIAMOND_SWORD)
@@ -211,6 +224,20 @@ public class DebugCommand extends Command {
                                 .name(Component.text("a nice sword, but a bit broken"))
                                 .buttonClickHandler((button, g, page, index, leftClick) -> {
                                     g.session().sendAsyncAlert("Button clicked on page 1 at index " + index);
+                                })
+                                .build())
+                            .slot(21, SlotBuilder.create()
+                                .item(ItemRegistry.GOLDEN_AXE)
+                                .dataComponent(DataComponentTypes.DAMAGE, 0)
+                                .name(Component.text("magic axe"))
+                                .tickHandler((slot, gui, page, index) -> {
+                                    int damage = slot.item().getDataComponents().get(DataComponentTypes.DAMAGE);
+                                    damage++;
+                                    if (damage > 32) {
+                                        damage = 0;
+                                    }
+                                    slot.item().getDataComponents().put(DataComponentTypes.DAMAGE, damage);
+                                    page.setStale();
                                 })
                                 .build())
                             .slot(22, SlotBuilder.create()

@@ -1,6 +1,7 @@
 package com.zenith.feature.gui;
 
 import com.zenith.event.client.ClientDisconnectEvent;
+import com.zenith.event.client.ClientTickEvent;
 import com.zenith.event.player.PlayerConnectionRemovedEvent;
 import com.zenith.network.codec.PacketCodecRegistries;
 import com.zenith.network.codec.PacketHandlerCodec;
@@ -29,7 +30,8 @@ public class GuiManager {
     private GuiManager() {
         EVENT_BUS.subscribe(this,
             of(ClientDisconnectEvent.class, e -> openGuiMap.clear()),
-            of(PlayerConnectionRemovedEvent.class, e -> openGuiMap.remove(e.serverConnection()))
+            of(PlayerConnectionRemovedEvent.class, e -> openGuiMap.remove(e.serverConnection())),
+            of(ClientTickEvent.class, e -> openGuiMap.values().forEach(Gui::tick))
         );
         var codec = PacketHandlerCodec.serverBuilder()
             .setId("gui")

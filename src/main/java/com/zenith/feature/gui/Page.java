@@ -77,6 +77,7 @@ public class Page {
     public void open(final Gui gui) {
         gui.session().sendAsync(new ClientboundOpenScreenPacket(containerId, type, title));
         sendContents(gui);
+        stale = false;
     }
 
     public void sendContents(Gui gui) {

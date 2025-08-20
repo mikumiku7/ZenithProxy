@@ -12,6 +12,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @NullMarked
 public class GuiBuilder {
@@ -104,6 +105,7 @@ public class GuiBuilder {
     }
 
     public Gui build() {
+        Objects.requireNonNull(session, "Session cannot be null");
         return new Gui(pages, session);
     }
 
